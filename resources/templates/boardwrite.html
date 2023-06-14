@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IT커뮤니티 게시글 쓰기</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css" />
+  </head>
+  <body>
+    <header>
+      <div class="logo">로고영역</div>
+      <a href="/board/forum/paging">포럼게시판</a>
+      <a href="#">질문게시판</a>
+      <a href="#">자료게시판</a>
+      <div class="search">검색창</div>
+      <div class="darkmode">다크모드</div>
+      <div class="login">로그인</div>
+    </header>
+    <div class="maincontainer">
+      <div class="boardName">포럼게시판</div>
+      <form class="boardwrite" action="/board/forum/write" method="post" enctype="multipart/form-data">
+        <!-- 여기부터 눈에 보이지 않는 영역입니다. 카테고리 번호(게시판 선택) 영역 -->
+<!--        <div>-->
+<!--          <input-->
+<!--            class="inputtitle"-->
+<!--            type="hidden"-->
+<!--            name="title"-->
+<!--            placeholder="게시판 번호"-->
+<!--          />-->
+<!--          &lt;!&ndash; 여기까지 눈에 보이지 않는 영역입니다. 카테고리 번호(게시판 선택) 영역 &ndash;&gt;-->
+<!--        </div>-->
+        <div>
+          <input type="text" name="category" placeholder="카테고리" />
+          <input type="text" name="author" placeholder="작성자" />
+        </div>
+        <div>
+          <input class="inputtitle" type="text" name="title" placeholder="제목" />
+        </div>
+        <div>
+          <textarea class="inputcontent" name="content" placeholder="내용"></textarea>
+        </div>
+        <div>
+          <input type="file" name="boardFile" />
+        </div>
+        <button type="submit">작성</button>
+        <button type="button" onclick="listReq()">목록</button>
+      </form>
+    </div>
+    <footer>Copyright ⓒ 2023 TestPage. All rights reserved.</footer>
+  </body>
+  <script>
+    const listReq = () => {
+      location.href="/board/forum/";
+    }
+  </script>
+
+</html>

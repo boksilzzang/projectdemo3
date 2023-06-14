@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IT커뮤니티 게시글 상세보기</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <header>
+      <div class="logo">로고영역</div>
+      <a href="/board/forum/paging">포럼게시판</a>
+      <a href="#">질문게시판</a>
+      <a href="#">자료게시판</a>
+      <div class="search">검색창</div>
+      <div class="darkmode">다크모드</div>
+      <div class="login">로그인</div>
+    </header>
+    <div class="maincontainer">
+      <div class="boardName">포럼게시판</div>
+      <div class="boardinfo">
+        <div th:text="${forum.author}">작성자: 정혜</div>
+        <div class="cre_date">작성일: [[*{#temporals.format(forum.postDate, 'yyyy-MM-dd HH:mm:ss')}]]</div>
+        <div class="hits">조회수: [[${forum.views}]]</div>
+      </div>
+      <div th:text="${forum.title}"></div>
+      <div th:text="${forum.content}"></div>
+      <div th:if="${forum.fileAttached == 1}">
+        <img th:src="@{|/upload/${forum.storedFileName}|}" height="200">
+      </div>
+      <div class="btnbox">
+        <button type="button" onclick="listReq()">목록</button>
+        <button type="button" th:attr="onclick=|updateForm('${forum.postNo}')|">수정</button>
+        <button type="button" onclick="deleteReq()">삭제</button>
+      </div>
+      <!--댓글 작성 부분-->
+      <div id="comment-write">
+        <input type="text" id="cmContent" name="cmContent" placeholder="댓글내용">
+        <button id="comment-write-btn" onclick="commentWrite()">댓글 작성</button>
+      </div>
+      <!--댓글 출력 부분-->
+      <div id="comment-list">
+        <table class="commenttable">
+          <tr th:each="comment: ${commentList}">
+            <td th:text="${comment.cmId}"/>
+            <td th:text="${comment.cmContent}"></td>
+            <td th:text="${#temporals.format(comment.cmDate, 'yyyy-MM-dd HH:mm:ss')}"></td>
+            <td><button th:attr="onclick=|likeComment('${comment.cmId}')|">👍</button></td>
+            <td><button th:attr="onclick=|deleteComment('${comment.cmId}')|">삭제</button></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <footer>Copyright ⓒ 2023 TestPage. All rights reserved.</footer>
+  </body>
+<script th:inline="javascript">
+
+  const likeComment = (cmId) => {
+    const postNo = [[${forum.postNo}]];
+    $.ajax({
+      type: "post",
+      url: "/comment/like/" + cmId,
+      success: function (res) {
+        console.log("댓글 좋아요 요청 성공:", res);
+        // 여기에서 좋아요 처리에 따른 UI 업데이트 작업을 수행합니다.
+        location.href="/board/forum/"+postNo;
+      },
+      error: function (err) {
+        console.log("댓글 좋아요 요청 실패:", err);
+      }
+    });
+  }
+
+  const commentWrite = () => {
+    const content = document.getElementById("cmContent").value;
+    console.log("댓글 내용: ",content);
+    const postNo = [[${forum.postNo}]] //게시글 번호
+
+    $.ajax({
+    //요청 방식: post, 요청 주소: /comment/write, 요청데이터: 작성자, 게시글 번호
+      type: "post",
+      url: "/comment/write",
+      data: {
+        "cmContent": content,
+        "postNo": postNo
+      },
+      success: function(res) {
+        console.log("요청성공", res);
+        // 댓글을 출력하는 코드 추가
+        let output = "<table class='commenttable'>";
+        for(let i in res) {
+          output += "<tr>"
+          output += "<td>" + res[i].cmId +"</td>"
+          output += "<td>" + res[i].cmContent + "</td>"
+          output += "<td>" + new Date(res[i].cmDate).toISOString().slice(0, 19).replace("T", " ") + "</td>";
+          output += "<td><button th:attr='onclick=|likeComment('${comment.cmId')|'>👍</button>"
+          output += "<td><button type='button' th:attr='onclick=|deleteComment('${comment.cmId}')|'>삭제</button></td>";
+          output += "</tr>"
+        }
+        output += "</table>"
+        document.getElementById('comment-list').innerHTML = output;
+        document.getElementById('cmContent').value = '';
+      },
+      error: function(err) {
+        console.log("요청실패",err);
+      }
+
+
+    });
+  }
+
+  const deleteComment = (cmId) => {
+    const contents = document.getElementById("cmContent").value;
+    const confirmed = confirm("정말로 삭제하시겠습니까?");
+    const postNo = [[${forum.postNo}]];
+
+    if(confirmed){
+      $.ajax({
+        //요청 방식 : delete, 요청 주소: /comment/delete, 요청데이터: 작성자, 작성내용, 게시글번호
+        type: "delete",
+        url: "/comment/delete/"+cmId,
+        data : {
+          "commentContents": contents,
+          "postNo": postNo
+        },
+        success: function (res) {
+          console.log("요청성공", res);
+          location.href="/board/forum/"+postNo;
+        },
+        error: function (request, status, error) {
+          console.log("code: " + request.status)
+          console.log("message: " + request.responseText)
+          console.log("error: " + error);
+        }
+      });
+    }
+  }
+
+  const listReq = () => {
+    location.href="/board/forum/paging";
+  }
+  const updateForm = (postNo) => {
+    location.href="/board/forum/update/"+postNo;
+  }
+  const deleteReq = () => {
+    const postNo = [[${forum.postNo}]];
+    location.href="/board/forum/delete/"+postNo;
+  }
+</script>
+</html>
